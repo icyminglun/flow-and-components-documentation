@@ -17,13 +17,13 @@ The main component of the shortcut API is `ShortcutRegistration`.
 Registering a shortcut yields a `ShortcutRegistration` instance which can be
 used to further configure and remove the registered shortcut. Both
 `Focusable` and `ClickNotifier` interfaces offer shorthand methods for
-registering shortcuts which perform the specified by the interface;
+registering shortcuts which perform the action specified by the interface;
 `Focusable` components are focused and `ClickNotifier` components are clicked.
 
 More flexible shortcut offerings are provided by `ShortcutActions` through
 which a normal `Runnable` instance can be bound to a shortcut.
 
-Here is a simple use-case where we want ENTER-key to perform login on a
+Here is a simple use-case where we want ENTER key to perform login on a
 `TextField`:
 
 [source, java]
@@ -36,9 +36,37 @@ ShortcutActions.exec(this::login, username).on(Key.ENTER);
 `ShortcutRegistration` is a result of such a registration.
 
 The `ShortcutRegistration` offers the actual API for configuring the shortcut
-itself: which keys to use, who owns the shortcut, inside which components is
-the shortcut valid, and how should the JavaScript event be treated (prevent
-default and stop propagation options).
+itself: which keys to use...
+
+[source, java]
+----
+shortcutRegistration.on('K').alt();
+----
+
+... who owns the shortcut, ...
+
+[source, java]
+----
+shortcutRegistration.bindLifecycleTo(component);
+----
+
+\... inside which components the shortcut is handled, ...
+
+[source, java]
+----
+shortcutRegistration.scope(myScopeComponent1, myScopeComponent2);
+----
+
+\... and how the JavaScript event should be treated (prevent default and stop
+propagation options).
+
+[source, java]
+----
+shortcutRegistration.preventDefault().stopPropagation();
+----
+
+// TODO: bring examples here. Closer to the descriptory text itself
+
 
 // TODO: focus shortcut might have scope self instead
 By default, the shortcuts registered by any means have a listening scope of
@@ -56,18 +84,18 @@ Div myDivComponent = new Div();
 shortcutRegistration.scope(myDivComponent);
 ----
 
-In general browser events is a complex topic. In order to generate events, a
+In general, browser events are a complex topic. In order to generate events, a
 non-input tag must be focusable by setting its `tabindex` property. For `<div>`
 tags or other non-input tags, a good practice is to set the `tabindex="-1"`
-since a negative value will not include it in the tab sequence.
+since a negative value will exclude it from the tab sequence.
 
 In addition to controlling the scope of a shortcut, you can also control the
 owner of the shortcut. The owner controls _when_ the shortcut is available -
-its life cycle is tied to that of the owners. In case of the shortcuts
-created by `Focusable` or `ClickNotifier` the owner is automatically the
+its life cycle is tied to that of the owner. In case of the shortcuts
+created by `Focusable` or `ClickNotifier`, the owner is automatically the
 component itself. When using the `ShortcutActions.exec(Runnable)` the owner
-is `UI`; Use the override `ShortcutActions.exec(Runnable, Component)` if you
-want to specify the owner for action shortcuts.
+is `UI`; use the override `ShortcutActions.exec(Runnable, Component)` if you
+want to specify the owner for these shortcuts.
 
 === Shortcuts by examples
 
@@ -86,8 +114,8 @@ submit.addClickListener(event -> submit());
 submit.addClickShortcut().on(Key.ENTER);
 ----
 
-The easiest method for adding a shortcut to you application is using global
-shortcuts. `ShortcutActions.exec` method is meant for just that.
+Many times you will need to execute arbitrary code in response to a shortcut.
+`ShortcutActions.exec` method is meant just for that.
 
 Here is an example on how we can add a global shortcut:
 
@@ -164,26 +192,26 @@ public class LoginScreen extends FlexLayout {
 }
 ----
 
-If you want to stop the keyboard event from propagating up the dom tree once a
+If you want to stop the keyboard event from propagating up the DOM tree once a
 shortcut has been detected or prevent the default key actions from taking place
-you can use the `ShortcutRegistration` to do that. Below is a very contrieved
-example demonstrating the usage of those methods:
+you can use the `ShortcutRegistration` to do that.
+
+Below is an example how to produce '000' in a text field when the user
+presses '*'.
 
 [source, java]
 ----
 TextField textField = new TextField();
-// In this example, the shortcut is scoped to the textField itself, so the
-// shortcut only works inside the textField. When the user presses 'A' or 'a'
-// inside the textField, instead of typing out that letter, the contents of the
-// textField are printed into the console
-ShortcutActions.exec(() -> System.out.println(textField.getValue()), textField)
-        .on('A').scope(textField).preventDefault().stopPropagation();
+// When the user presses '*', three zeros are added instead
+ShortcutActions.exec(
+        () -> textField.setValue(textField.getValue() + "000"), textField)
+        .on(Key.MULTIPLY).scope(textField).preventDefault().stopPropagation();
 ----
 
 
 In order to receive the event when none of the input fields are focused, but
 user clicks somewhere on the form area itself, we need to implement `Focusable`
-and set the `tabIndes` to eg. -1:
+and set the `tabIndex` to e.g. -1:
 
 [source, java]
 ----

@@ -34,7 +34,27 @@ public class Shortcuts {
     }
 
     /**
-     * Third example
+     * Third example(s) (contains 4 one-liners
+     */
+    public void shortUsablityExamples()  {
+        // helpers:
+        Div component = new Div();
+        Div myScopeComponent1 = new Div();
+        Div myScopeComponent2 = new Div();
+        ShortcutRegistration shortcutRegistration = ShortcutActions.exec(() ->{});
+
+        // ex. 1
+        shortcutRegistration.on('K').alt();
+        // ex. 2
+        shortcutRegistration.bindLifecycleTo(component);
+        // ex. 3
+        shortcutRegistration.scope(myScopeComponent1, myScopeComponent2);
+        // ex. 4
+        shortcutRegistration.preventDefault().stopPropagation();
+    }
+
+    /**
+     * Fourth example
      */
     public void focusAndClickExample() {
         TextField answerField = new TextField();
@@ -48,7 +68,7 @@ public class Shortcuts {
     }
 
     /**
-     * Fourth example
+     * Fifth example
      * Global shortcuts
      */
     public class SomeView extends Div {
@@ -69,7 +89,7 @@ public class Shortcuts {
     }
 
     /**
-     * Fifth example
+     * Sixth example
      * Extended scope
      */
     public class Login1 {
@@ -95,7 +115,7 @@ public class Shortcuts {
     }
 
     /**
-     * Sixth example
+     * Seventh example
      * Extended scope, but a click shortcut
      */
 
@@ -121,20 +141,18 @@ public class Shortcuts {
     }
 
     /**
-     * Seventh example
+     * Eighth example
      */
     public void preventPropagationAndDefaultExample() {
         TextField textField = new TextField();
-        // In this example, the shortcut is scoped to the textField itself, so the
-        // shortcut only works inside the textField. When the user presses 'A' or 'a'
-        // inside the textField, instead of typing out that letter, the contents of the
-        // textField are printed into the console
-        ShortcutActions.exec(() -> System.out.println(textField.getValue()), textField)
-                .on('A').scope(textField).preventDefault().stopPropagation();
+        // When the user presses '*', three zeros are added instead
+        ShortcutActions.exec(
+                () -> textField.setValue(textField.getValue() + "000"), textField)
+                .on('*').scope(textField).preventDefault().stopPropagation();
     }
 
     /**
-     * Eighth example
+     * Ninth example
      * Focusable + tabindex trick
      */
     public class Login3 {
