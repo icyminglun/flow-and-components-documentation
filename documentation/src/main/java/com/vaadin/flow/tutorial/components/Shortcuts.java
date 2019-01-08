@@ -122,6 +122,19 @@ public class Shortcuts {
 
     /**
      * Seventh example
+     */
+    public void preventPropagationAndDefaultExample() {
+        TextField textField = new TextField();
+        // In this example, the shortcut is scoped to the textField itself, so the
+        // shortcut only works inside the textField. When the user presses 'A' or 'a'
+        // inside the textField, instead of typing out that letter, the contents of the
+        // textField are printed into the console
+        ShortcutActions.exec(() -> System.out.println(textField.getValue()), textField)
+                .on('A').scope(textField).preventDefault().stopPropagation();
+    }
+
+    /**
+     * Eighth example
      * Focusable + tabindex trick
      */
     public class Login3 {
