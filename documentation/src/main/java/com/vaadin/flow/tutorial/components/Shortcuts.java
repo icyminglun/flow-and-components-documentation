@@ -2,42 +2,62 @@ package com.vaadin.flow.tutorial.components;
 
 import com.vaadin.flow.component.Focusable;
 import com.vaadin.flow.component.Key;
-import com.vaadin.flow.component.Shortcut;
-import com.vaadin.flow.component.ShortcutNotifier;
+import com.vaadin.flow.component.ShortcutActions;
+import com.vaadin.flow.component.ShortcutRegistration;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.shared.Registration;
 import com.vaadin.flow.tutorial.annotations.CodeFor;
 
 @CodeFor("components/tutorial-flow-shortcut.asciidoc")
 public class Shortcuts {
 
-    public void focusableShortcut() {
+    /**
+     * First example
+     */
+    public void smallExecExample() {
         TextField username = new TextField();
-        username.addShortcutListener(Shortcut.of(Key.ENTER), this::login);
-    }
-
-    public void clickShortcut() {
-        TextField username = new TextField();
-        TextField password = new TextField();
-        Button login = new Button();
-        login.addClickListener(event -> login(),
-                Shortcut.of(Key.ENTER).withSources(username, password));
+        ShortcutActions.exec(this::login, username).on(Key.ENTER);
     }
 
     /**
-     * Global shortcut example (third)
+     * Second example
+     */
+    public void smallScopeExample() {
+        ShortcutRegistration shortcutRegistration = ShortcutActions
+                .exec(() -> {});
+        // these are the actual rows
+        Div myDivComponent = new Div();
+        shortcutRegistration.scope(myDivComponent);
+    }
+
+    /**
+     * Third example
+     */
+    public void focusAndClickExample() {
+        TextField answerField = new TextField();
+        // focus the answerField pressing ALT+F
+        answerField.addFocusShortcut().on('F').alt();
+
+        Button submit = new Button();
+        submit.addClickListener(event -> submit());
+        // submit the answer by pressing ENTER
+        submit.addClickShortcut().on(Key.ENTER);
+    }
+
+    /**
+     * Fourth example
+     * Global shortcuts
      */
     public class SomeView extends Div {
-        private Registration shortcutRegistration;
+        private ShortcutRegistration shortcutRegistration;
 
         public SomeView() {
-            shortcutRegistration = UI.getCurrent().addShortcutListener(
-                    Shortcut.of(Key.BACKSPACE),
-                    event -> UI.getCurrent().navigate(MainView.class));
+            shortcutRegistration = ShortcutActions.exec(
+                    () -> UI.getCurrent().navigate(MainView.class))
+                    .on(Key.BACKSPACE);
         }
 
         /**
@@ -49,21 +69,23 @@ public class Shortcuts {
     }
 
     /**
-     * ShortcutNotifier example (fourth)
+     * Fifth example
+     * Extended scope
      */
     public class Login1 {
-        public class LoginScreen extends FlexLayout implements ShortcutNotifier {
+        public class LoginScreen extends FlexLayout {
 
             public LoginScreen() {
                 TextField username = new TextField();
                 TextField password = new TextField();
                 Button login = new Button();
+                login.addClickListener(event -> this.login());
 
                 add(username);
                 add(password);
                 add(login);
 
-                this.addShortcutListener(Shortcut.of(Key.ENTER), this::login);
+                ShortcutActions.exec(this::login, this).scope(this).on(Key.ENTER);
             }
 
             private void login() {
@@ -73,7 +95,8 @@ public class Shortcuts {
     }
 
     /**
-     * Alternative approach for ShortcutNotifier (fifth)
+     * Sixth example
+     * Extended scope, but a click shortcut
      */
 
     public class Login2 {
@@ -83,15 +106,12 @@ public class Shortcuts {
                 TextField username = new TextField();
                 TextField password = new TextField();
                 Button login = new Button();
+                login.addClickListener(event -> this.login());
+                login.addClickShortcut().scope(this).on(Key.ENTER);
 
                 add(username);
                 add(password);
                 add(login);
-
-                // notice the layout as a source for the shortcut. The shortcut will only
-                // get triggered when used from a focused field inside the layout
-                login.addClickListener(event -> login(),
-                        Shortcut.of(Key.ENTER).withSources(this));
             }
 
             private void login() {
@@ -101,7 +121,8 @@ public class Shortcuts {
     }
 
     /**
-     * Focusable + tabindex trick (sixth)
+     * Seventh example
+     * Focusable + tabindex trick
      */
     public class Login3 {
         public class LoginScreen extends FlexLayout implements Focusable {
@@ -125,6 +146,8 @@ public class Shortcuts {
      */
 
     private void login() {}
+
+    private void submit() {}
 
     public class MainView extends Div {
 

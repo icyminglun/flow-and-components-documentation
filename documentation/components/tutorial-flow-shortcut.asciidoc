@@ -8,52 +8,98 @@ layout: page
 
 == Overview
 
-Shortcut feature enhances the developer with the ability of creating custom keyboard shortcuts and receive the notification when the shortcuts are used.
+Shortcut feature enhances the developer with the ability to create custom
+keyboard shortcuts and receive the notification when the shortcuts are used.
 
 == Using Shortcuts
 
-The API is defined as `ShortcutNotifier` mixin. By default it also comes as part of `Focusable`, so any focusable component is allowed to notify about shortcut events received from itself or its children. Alternatively, `Focusable` or `ShortcutNotifier` may be implemented in any subclass.
+The main component of the shortcut API is `ShortcutRegistration`.
+Registering a shortcut yields a `ShortcutRegistration` instance which can be
+used to further configure and remove the registered shortcut. Both
+`Focusable` and `ClickNotifier` interfaces offer shorthand methods for
+registering shortcuts which perform the specified by the interface;
+`Focusable` components are focused and `ClickNotifier` components are clicked.
 
-Here is a simple use-case where we want to add a shortcut on a `TextField`:
+More flexible shortcut offerings are provided by `ShortcutActions` through
+which a normal `Runnable` instance can be bound to a shortcut.
 
-[source, java]
-----
-TextField username = new TextField();
-username.addShortcutListener(Shortcut.of(Key.ENTER), this::login);
-----
-
-`Shortcut` class defines the shortcut and besides the actual combination of keys it also contains options to alter the browser default action and propagation of the event. By default, browser's `preventDefault` is used while `stopPropagation` is ignored. Use `Shortcut::allowDefault()` to allow the browser default action of the event.
-
-`Shortcut` also offers support by allowing to specify a list of sources for the event, beside the component where the event is registered.
-
-In general browser events is a complex topic. In order to generate events, a non-input tag must be focusable by setting its `tabindex` property. For `div` s or other non-input tags, a good practice is to set the `tabindex="-1"` since a negative value will not include it in the tab sequence.
-
-Also we added support for `ClickNotifier`. A `ClickEvent` listener may be registered together with a `Shortcut`.
-
-A good example demonstrating both `Shortcut::setSources` and `ClickNotifier` would be as follow:
+Here is a simple use-case where we want ENTER-key to perform login on a
+`TextField`:
 
 [source, java]
 ----
 TextField username = new TextField();
-TextField password = new TextField();
-Button login = new Button();
-login.addClickListener(event -> login(),
-        Shortcut.of(Key.ENTER).withSources(username, password));
+ShortcutActions.exec(this::login, username).on(Key.ENTER);
 ----
 
-The easiest method for adding a shortcut to you application is using global shortcuts. The `UI` has a method called `addShortcutListener` which allows us to register a global shortcut to our applcation. This shortcut is present on every page.
+`ShortcutActions` class offers methods for registering a shortcut and
+`ShortcutRegistration` is a result of such a registration.
+
+The `ShortcutRegistration` offers the actual API for configuring the shortcut
+itself: which keys to use, who owns the shortcut, inside which components is
+the shortcut valid, and how should the JavaScript event be treated (prevent
+default and stop propagation options).
+
+// TODO: focus shortcut might have scope self instead
+By default, the shortcuts registered by any means have a listening scope of
+global. This means that the shortcut, when the keys are pressed, will be
+invoked not matter what the user has focused on the page. If this is not
+something you want to happen, you can control this by using
+`ShortcutRegistration::scope(Component, Component...)`. This allows you to
+select which components will catch the shortcut. Say you have a `<div>`
+filled with text fields and you want a shortcut to work only when the user is
+in one of those text fields. Set the scope to `<div>` and you are done:
+
+[source, java]
+----
+Div myDivComponent = new Div();
+shortcutRegistration.scope(myDivComponent);
+----
+
+In general browser events is a complex topic. In order to generate events, a
+non-input tag must be focusable by setting its `tabindex` property. For `<div>`
+tags or other non-input tags, a good practice is to set the `tabindex="-1"`
+since a negative value will not include it in the tab sequence.
+
+In addition to controlling the scope of a shortcut, you can also control the
+owner of the shortcut. The owner controls _when_ the shortcut is available -
+its life cycle is tied to that of the owners. In case of the shortcuts
+created by `Focusable` or `ClickNotifier` the owner is automatically the
+component itself. When using the `ShortcutActions.exec(Runnable)` the owner
+is `UI`; Use the override `ShortcutActions.exec(Runnable, Component)` if you
+want to specify the owner for action shortcuts.
+
+=== Shortcuts by examples
+
+The example below demonstrates how to configure both _focus_ and _click_
+shortcuts:
+
+[source, java]
+----
+TextField answerField = new TextField();
+// focus the answerField pressing ALT+F
+answerField.addFocusShortcut().on('F').alt();
+
+Button submit = new Button();
+submit.addClickListener(event -> submit());
+// submit the answer by pressing ENTER
+submit.addClickShortcut().on(Key.ENTER);
+----
+
+The easiest method for adding a shortcut to you application is using global
+shortcuts. `ShortcutActions.exec` method is meant for just that.
 
 Here is an example on how we can add a global shortcut:
 
 [source, java]
 ----
 public class SomeView extends Div {
-    private Registration shortcutRegistration;
+    private ShortcutRegistration shortcutRegistration;
 
     public SomeView() {
-        shortcutRegistration = UI.getCurrent().addShortcutListener(
-                Shortcut.of(Key.BACKSPACE),
-                event -> UI.getCurrent().navigate(MainView.class));
+        shortcutRegistration = ShortcutActions.exec(
+                () -> UI.getCurrent().navigate(MainView.class))
+                .on(Key.BACKSPACE);
     }
 
     /**
@@ -65,32 +111,9 @@ public class SomeView extends Div {
 }
 ----
 
-
-In case we want to add the shortcut listener on a layout, the layout must implement `ShortcutNotifier`. However the shortcut will work only if either `username`, `password` or `button` fields are focused while user is using the shortcut:
-
-[source, java]
-----
-public class LoginScreen extends FlexLayout implements ShortcutNotifier {
-
-    public LoginScreen() {
-        TextField username = new TextField();
-        TextField password = new TextField();
-        Button login = new Button();
-
-        add(username);
-        add(password);
-        add(login);
-
-        this.addShortcutListener(Shortcut.of(Key.ENTER), this::login);
-    }
-
-    private void login() {
-        // Login goes here.
-    }
-}
-----
-
-Instead of implementing `ShortcutNotifier` on the layout, we can add the layout as a source for the `Shortcut` when adding a click listener for the `login` button. As in the previous example the shortcut will work only if either `username`, `password` or `button` field is focused:
+In this example we will expand on topic of scopes. We present a shortcut
+owned by and scoped to a layout. Remember, the shortcut can only be invoked
+when of the the elements inside the layout has focus.
 
 [source, java]
 ----
@@ -100,15 +123,13 @@ public class LoginScreen extends FlexLayout {
         TextField username = new TextField();
         TextField password = new TextField();
         Button login = new Button();
+        login.addClickListener(event -> this.login());
 
         add(username);
         add(password);
         add(login);
 
-        // notice the layout as a source for the shortcut. The shortcut will only
-        // get triggered when used from a focused field inside the layout
-        login.addClickListener(event -> login(),
-                Shortcut.of(Key.ENTER).withSources(this));
+        ShortcutActions.exec(this::login, this).scope(this).on(Key.ENTER);
     }
 
     private void login() {
@@ -117,7 +138,35 @@ public class LoginScreen extends FlexLayout {
 }
 ----
 
-In order to receive the event when none of the input fields are focused, but user clicks somewhere on the form area itself, we need to implement `Focusable` and set the `tabIndes` to eg. -1:
+This example presents the same functionality but implemented through the
+_click_ shortcut. Notice that the scope is still the layout (if no scope is
+set, it will be global).
+
+[source, java]
+----
+public class LoginScreen extends FlexLayout {
+
+    public LoginScreen() {
+        TextField username = new TextField();
+        TextField password = new TextField();
+        Button login = new Button();
+        login.addClickListener(event -> this.login());
+        login.addClickShortcut().scope(this).on(Key.ENTER);
+
+        add(username);
+        add(password);
+        add(login);
+    }
+
+    private void login() {
+        // Login goes here.
+    }
+}
+----
+
+In order to receive the event when none of the input fields are focused, but
+user clicks somewhere on the form area itself, we need to implement `Focusable`
+and set the `tabIndes` to eg. -1:
 
 [source, java]
 ----
