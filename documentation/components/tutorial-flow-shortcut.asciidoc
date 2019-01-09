@@ -43,7 +43,7 @@ itself: which keys to use...
 shortcutRegistration.on('K').alt();
 ----
 
-... who owns the shortcut, ...
+\... who owns the shortcut, ...
 
 [source, java]
 ----
@@ -99,25 +99,10 @@ want to specify the owner for these shortcuts.
 
 === Shortcuts by examples
 
-The example below demonstrates how to configure both _focus_ and _click_
-shortcuts:
+Many times you will want a global shortcut which run arbitrary code in response
+the the shortcut event. `ShortcutActions.exec` method is meant just for that.
 
-[source, java]
-----
-TextField answerField = new TextField();
-// focus the answerField pressing ALT+F
-answerField.addFocusShortcut().on('F').alt();
-
-Button submit = new Button();
-submit.addClickListener(event -> submit());
-// submit the answer by pressing ENTER
-submit.addClickShortcut().on(Key.ENTER);
-----
-
-Many times you will need to execute arbitrary code in response to a shortcut.
-`ShortcutActions.exec` method is meant just for that.
-
-Here is an example on how we can add a global shortcut:
+Here is an example on how we can add such a shortcut:
 
 [source, java]
 ----
@@ -138,6 +123,23 @@ public class SomeView extends Div {
     }
 }
 ----
+
+The example below demonstrates how to configure both _focus_ and _click_
+shortcuts:
+
+[source, java]
+----
+TextField answerField = new TextField();
+// focus the answerField pressing ALT+F
+answerField.addFocusShortcut().on('F').alt();
+
+Button submit = new Button();
+submit.addClickListener(event -> submit());
+// submit the answer by pressing ENTER
+submit.addClickShortcut().on(Key.ENTER);
+----
+
+
 
 In this example we will expand on topic of scopes. We present a shortcut
 owned by and scoped to a layout. Remember, the shortcut can only be invoked

@@ -55,20 +55,6 @@ public class Shortcuts {
 
     /**
      * Fourth example
-     */
-    public void focusAndClickExample() {
-        TextField answerField = new TextField();
-        // focus the answerField pressing ALT+F
-        answerField.addFocusShortcut().on('F').alt();
-
-        Button submit = new Button();
-        submit.addClickListener(event -> submit());
-        // submit the answer by pressing ENTER
-        submit.addClickShortcut().on(Key.ENTER);
-    }
-
-    /**
-     * Fifth example
      * Global shortcuts
      */
     public class SomeView extends Div {
@@ -86,6 +72,20 @@ public class Shortcuts {
         private void removeShortcut() {
             if (shortcutRegistration != null) shortcutRegistration.remove();
         }
+    }
+
+    /**
+     * Fifth example
+     */
+    public void focusAndClickExample() {
+        TextField answerField = new TextField();
+        // focus the answerField pressing ALT+F
+        answerField.addFocusShortcut().on('F').alt();
+
+        Button submit = new Button();
+        submit.addClickListener(event -> submit());
+        // submit the answer by pressing ENTER
+        submit.addClickShortcut().on(Key.ENTER);
     }
 
     /**
